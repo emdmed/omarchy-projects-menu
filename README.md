@@ -19,6 +19,14 @@ Seamlessly open your projects in Neovim directly from Omarchy's menu interface.
 
 ## Installation
 
+### Use the new installation CLI with 
+
+```
+npx omarchy-expanded-menus
+```
+
+### Manual installation
+
 1. **Backup** your existing `omarchy-menu` file:
    ```bash
    cp /home/{user}/.local/share/omarchy/bin/omarchy-menu ~/omarchy-menu.backup
@@ -31,7 +39,7 @@ Seamlessly open your projects in Neovim directly from Omarchy's menu interface.
 Set the navigation depth for Projects and Workflows sections by modifying these variables (lines 10-11):
 
 ```bash
-PROJECTS_MENU_LEVELS=${PROJECTS_MENU_LEVELS:-2}  # Default: 2 levels
+PROJECTS_MENU_LEVELS=${PROJECTS_MENU_LEVELS:-1}  # Default: 1 levels
 WORKFLOW_MENU_LEVELS=${WORKFLOW_MENU_LEVELS:-1}  # Default: 1 level
 ```
 
