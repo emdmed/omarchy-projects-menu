@@ -33,7 +33,7 @@ function clearConsole() {
 
 function printHeader() {
   clearConsole();
-  log.header('Omarchy Menu Manager v1.0');
+  log.header('Omarchy Menu Manager v0.0.2');
   console.log('Backup and replace tool for Omarchy Menu\n');
 }
 
