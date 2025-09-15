@@ -1,0 +1,36 @@
+{
+  "name": "omarchy-expanded-menus",
+  "version": "0.0.1",
+  "description": "Additional options for your Omarchy main menu",
+  "main": "index.js",
+  "bin": {
+    "omarchy-expanded-menus": "./index.js"
+  },
+  "scripts": {
+    "start": "node index",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/emdmed/omarchy-projects-menu.git"
+  },
+  "keywords": [
+    "omarchy",
+    "menu",
+    "cli",
+    "terminal"
+  ],
+  "author": "etrs",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/emdmed/omarchy-projects-menu/issues"
+  },
+  "homepage": "https://github.com/emdmed/omarchy-projects-menu#readme",
+  "dependencies": {
+    "commander": "^14.0.1",
+    "inquirer": "^12.9.6"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  }
+}
