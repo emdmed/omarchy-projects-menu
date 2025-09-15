@@ -1,5 +1,6 @@
 #!/bin/bash
 
+# ./omarchy-menu
 export PATH="$HOME/.local/share/omarchy/bin:$PATH"
 
 # Set to true when going directly to a submenu, so we can exit directly
@@ -8,7 +9,7 @@ BACK_TO_EXIT=false
 back_to() {
   local parent_menu="$1"
 
-  if [[ "$DIRECT_ACCESS" == "true" ]]; then
+  if [[ "$BACK_TO_EXIT" == "true" ]]; then
     exit 0
   elif [[ -n "$parent_menu" ]]; then
     "$parent_menu"
@@ -407,12 +408,10 @@ show_system_menu() {
   esac
 }
 
-show_main_menu() {
-  go_to_menu "$(menu "Go" "󰀻  Apps\n  Projects\n󰧑  Learn\n  Capture\n󰔎  Toggle\n  Style\n  Setup\n󰉉  Install\n󰭌  Remove\n  Update\n  About\n  System")"
-}
-
 show_projects_menu() {
-  local projects_dir="$HOME/projects"
+
+  local subpath="${1:-projects}"
+  local projects_dir="$HOME/$subpath"
 
   if [[ ! -d "$projects_dir" ]]; then
     notify-send "Projects" "No projects directory found at $projects_dir"
@@ -460,10 +459,69 @@ show_projects_menu() {
   fi
 }
 
+show_workflow_menu() {
+  local subpath="${1:-projects}"
+  local projects_dir="$HOME/$subpath"
+
+  if [[ ! -d "$projects_dir" ]]; then
+    notify-send "Projects" "No projects directory found at $projects_dir"
+    show_main_menu
+    return
+  fi
+
+  local project_dirs=()
+  local menu_options=""
+
+  while IFS= read -r -d '' dir; do
+    local project_name=$(basename "$dir")
+    project_dirs+=("$project_name")
+    if [[ -z "$menu_options" ]]; then
+      menu_options="  $project_name"
+    else
+      menu_options="$menu_options\n  $project_name"
+    fi
+  done < <(find "$projects_dir" -maxdepth 1 -type d -not -path "$projects_dir" -print0 2>/dev/null | sort -z)
+
+  if [[ ${#project_dirs[@]} -eq 0 ]]; then
+    notify-send "Projects" "No project folders found in $projects_dir"
+    show_main_menu
+    return
+  fi
+
+  local selected_project=$(menu "Projects" "$menu_options")
+
+  if [[ -z "$selected_project" || "$selected_project" == "CNCLD" ]]; then
+    show_main_menu
+    return
+  fi
+
+  local project_name="${selected_project#*  }"
+  project_name="${project_name##*( )}"
+  project_name="${project_name%%*( )}"
+
+  local project_path="$projects_dir/$project_name"
+
+  if [[ -d "$project_path" ]]; then
+    alacritty --working-directory "$project_path" -e nvim . &
+    sleep 0.1
+    alacritty --working-directory "$project_path" -e lazygit &
+    sleep 0.1
+    alacritty --working-directory "$project_path" &
+  else
+    notify-send "Error" "Project directory not found: $project_path"
+    show_main_menu
+  fi
+}
+
+show_main_menu() {
+  go_to_menu "$(menu "Go" "󰀻  Apps\n  Projects\n  Workflow\n󰧑  Learn\n  Capture\n󰔎  Toggle\n  Style\n  Setup\n󰉉  Install\n󰭌  Remove\n  Update\n  About\n  System")"
+}
+
 go_to_menu() {
   case "${1,,}" in
   *apps*) walker -p "Launch…" ;;
   *projects*) show_projects_menu ;;
+  *workflow*) show_workflow_menu ;;
   *learn*) show_learn_menu ;;
   *style*) show_style_menu ;;
   *theme*) show_theme_menu ;;
