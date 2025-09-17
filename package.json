@@ -1,6 +1,6 @@
 {
   "name": "omarchy-expanded-menus",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "Additional options for your Omarchy main menu",
   "main": "index.js",
   "bin": {
