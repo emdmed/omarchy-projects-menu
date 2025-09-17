@@ -33,7 +33,7 @@ function clearConsole() {
 
 function printHeader() {
   clearConsole();
-  log.header('Omarchy Menu Manager v0.0.2');
+  log.header('Omarchy Menu Manager v0.0.3');
   console.log('Backup and replace tool for Omarchy Menu\n');
 }
 
@@ -48,6 +48,28 @@ async function fileExists(filePath) {
   } catch {
     return false;
   }
+}
+
+async function askForOSVersion() {
+  console.log('\nWhich version of the OS are you running?\n');
+  console.log('  1) Version 2');
+  console.log('  2) Version 3\n');
+
+  const choice = await prompt('Select your OS version (1 or 2): ');
+
+  switch (choice) {
+    case '1':
+      return 'v2';
+    case '2':
+      return 'v3';
+    default:
+      log.error('Invalid option. Please choose 1 or 2.');
+      return await askForOSVersion();
+  }
+}
+
+async function selectVersion() {
+  return await askForOSVersion();
 }
 
 async function backupOmarchyMenu(username) {
@@ -77,14 +99,20 @@ async function backupOmarchyMenu(username) {
   }
 }
 
-async function replaceOmarchyMenu(username) {
+async function replaceOmarchyMenu(username, version = null) {
   const targetFile = `/home/${username}/.local/share/omarchy/bin/omarchy-menu`;
-  const sourceFile = path.join(__dirname, 'files', 'omarchy-menu');
+
+  // If no version specified, ask user for OS version
+  if (!version) {
+    version = await askForOSVersion();
+  }
+
+  const sourceFile = path.join(__dirname, 'files', version, 'omarchy-menu');
 
   try {
     if (!await fileExists(sourceFile)) {
       log.error(`Replacement file not found: ${sourceFile}`);
-      log.info('Package files may be missing. Try reinstalling the package.');
+      log.info(`Make sure the ${version} files exist in the package.`);
       return false;
     }
 
@@ -97,7 +125,7 @@ async function replaceOmarchyMenu(username) {
     await fs.copyFile(sourceFile, targetFile);
     await fs.chmod(targetFile, 0o755);
 
-    log.success(`File replaced: ${targetFile}`);
+    log.success(`File replaced with ${version} version: ${targetFile}`);
     return true;
   } catch (error) {
     log.error(`Replace failed: ${error.message}`);
@@ -130,7 +158,8 @@ async function checkStatus(username) {
 
   const omarchyPath = `/home/${username}/.local/share/omarchy/bin/omarchy-menu`;
   const backupPath = `/home/${username}/.local/share/omarchy/bin/omarchy-menu.backup`;
-  const replacementPath = path.join(__dirname, 'files', 'omarchy-menu');
+  const v2ReplacementPath = path.join(__dirname, 'files', 'v2', 'omarchy-menu');
+  const v3ReplacementPath = path.join(__dirname, 'files', 'v3', 'omarchy-menu');
 
   if (await fileExists(omarchyPath)) {
     const stats = await fs.stat(omarchyPath);
@@ -148,12 +177,23 @@ async function checkStatus(username) {
     log.info(`No backup found at: ${backupPath}`);
   }
 
-  if (await fileExists(replacementPath)) {
-    const stats = await fs.stat(replacementPath);
-    log.success(`Replacement file ready: ${replacementPath}`);
+  if (await fileExists(v2ReplacementPath)) {
+    const stats = await fs.stat(v2ReplacementPath);
+    log.success(`v2 replacement file ready: ${v2ReplacementPath}`);
     console.log(`   Size: ${stats.size} bytes`);
   } else {
-    log.error(`Replacement file not found: ${replacementPath}`);
+    log.error(`v2 replacement file not found: ${v2ReplacementPath}`);
+  }
+
+  if (await fileExists(v3ReplacementPath)) {
+    const stats = await fs.stat(v3ReplacementPath);
+    log.success(`v3 replacement file ready: ${v3ReplacementPath}`);
+    console.log(`   Size: ${stats.size} bytes`);
+  } else {
+    log.error(`v3 replacement file not found: ${v3ReplacementPath}`);
+  }
+
+  if (!await fileExists(v2ReplacementPath) && !await fileExists(v3ReplacementPath)) {
     log.warning('Package files may be missing. Try reinstalling the package.');
   }
 
@@ -259,6 +299,8 @@ program
   .option('-f, --full', 'full process (backup + replace)')
   .option('-s, --restore', 'restore from backup')
   .option('-c, --check', 'check status')
+  .option('-d, --detect', 'detect version only')
+  .option('-v, --version <version>', 'specify version (v2 or v3)')
   .option('-u, --user <username>', 'specify username')
   .action(async (options) => {
     const username = options.user || getCurrentUser();
@@ -266,12 +308,12 @@ program
     if (options.backup) {
       await backupOmarchyMenu(username);
     } else if (options.replace) {
-      await replaceOmarchyMenu(username);
+      await replaceOmarchyMenu(username, options.version);
     } else if (options.full) {
       console.log('Starting full process...');
       const backupOk = await backupOmarchyMenu(username);
       if (backupOk) {
-        await replaceOmarchyMenu(username);
+        await replaceOmarchyMenu(username, options.version);
       }
     } else if (options.restore) {
       await restoreFromBackup(username);
