@@ -7,8 +7,8 @@ export PATH="$HOME/.local/share/omarchy/bin:$PATH"
 BACK_TO_EXIT=false
 
 # Amount of directories allowed for navigation (max = 3)
-PROJECTS_MENU_LEVELS=${PROJECTS_MENU_LEVELS:-1}
-WORKFLOW_MENU_LEVELS=${WORKFLOW_MENU_LEVELS:-1}
+PROJECTS_MENU_LEVELS=${3}
+WORKFLOW_MENU_LEVELS=${3}
 
 back_to() {
   local parent_menu="$1"
@@ -428,6 +428,11 @@ directory_navigation() {
     return
   fi
 
+  is_project_root() {
+    local dir="$1"
+    [[ -d "$dir/.git" ]] || [[ -f "$dir/package.json" ]]
+  }
+
   if [[ "$levels" -eq 1 ]]; then
     local dirs=()
     local menu_options=""
@@ -541,6 +546,23 @@ directory_navigation() {
 
     selected_items+=("$selected_name")
     current_path="$current_path/$selected_name"
+
+    # Check if current directory is a project root before continuing navigation
+    if is_project_root "$current_path"; then
+      if [[ -d "$current_path" ]]; then
+        $action_callback "$current_path"
+      else
+        notify-send "Error" "$menu_type directory not found: $current_path"
+        if [[ "$menu_type" == "Projects" ]]; then
+          show_projects_menu
+        elif [[ "$menu_type" == "Workflow" ]]; then
+          show_workflow_menu
+        else
+          show_main_menu
+        fi
+      fi
+      return
+    fi
 
     if [[ $current_level -eq $levels ]]; then
       if [[ -d "$current_path" ]]; then
