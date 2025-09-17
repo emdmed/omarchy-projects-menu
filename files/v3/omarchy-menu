@@ -635,7 +635,7 @@ directory_navigation() {
 open_project() {
   local project_path="$1"
 
-  if [["$TERMINAL" == "Alacritty"]]; then
+  if [[ "$TERMINAL" == "alacritty" ]]; then
     $TERMINAL --working-directory "$project_path" -e nvim .
   else
     $TERMINAL --working-directory="$projects_path" -e nvim .
@@ -645,7 +645,7 @@ open_project() {
 open_workflow() {
   local project_path="$1"
 
-  if [["$TERMINAL" == "Alacritty"]]; then
+  if [[ "$TERMINAL" == "alacritty" ]]; then
 
     $TERMINAL --working-directory "$project_path" -e nvim . &
     sleep 0.1
